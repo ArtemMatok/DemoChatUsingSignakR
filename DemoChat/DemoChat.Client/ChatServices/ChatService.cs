@@ -9,7 +9,7 @@ namespace DemoChat.Client.ChatServices
         public Action? InvokeChatDisplay { get; set; }
         public List<Chat> Chats { get; set; } = [];
         private readonly HubConnection _hubConnection;
-
+        public bool IsConnected { get; set; }
         public ChatService(NavigationManager navigationManager)
         {
             _hubConnection = new HubConnectionBuilder()
@@ -25,5 +25,14 @@ namespace DemoChat.Client.ChatServices
                 InvokeChatDisplay?.Invoke();
             });
         }
+
+        public async Task StartConnectionAsync()
+        {
+            await _hubConnection.StartAsync();
+            IsConnected = _hubConnection!.State == HubConnectionState.Connected;
+        }
+
+        public Task SendChat(Chat chat) =>
+            _hubConnection!.SendAsync("SendMessage", chat);
     }
 }

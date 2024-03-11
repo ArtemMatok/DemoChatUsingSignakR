@@ -1,6 +1,7 @@
 ﻿@page "/chat"
 @rendermode InteractiveWebAssembly
 @inject NavigationManager _navManager
+@inject ChatService _chatService
 
 <PageTitle>ChatPage</PageTitle>
 
@@ -11,7 +12,7 @@
             <div class="card-header">Chat</div>
             <div class="card-body">
                 <ul class="list-group">
-                    @foreach (var item in Chats)
+                    @foreach (var item in _chatService.Chats)
                     {
                         <li class="list-group-item mb-2">
                             @item.DateTime.ToString("dd/MM/yy")
@@ -34,7 +35,7 @@
                 </div>
             </div>
             <div class="card-footer fw-bold">
-                @if(!IsConnected)
+                @if(!_chatService.IsConnected)
                 {
                     <div class="alert alert-danger">
                         Chat Disconnected
@@ -53,46 +54,18 @@
 
 @code {
     public static string? StoredUserName { get; set; }
-    private HubConnection? hubConnection;
-    private List<Chat>  Chats= [];
 
     private Chat Chat = new();
 
-
     protected override async Task OnInitializedAsync()
     {
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(_navManager.ToAbsoluteUri("/chathub"))
-            .Build();
-
-
-        hubConnection.On<Chat>("RecieveMessage", (Chat) =>
-        {
-            Chats.Add(Chat);
-            InvokeAsync(() =>StateHasChanged());
-        });
-
-        await hubConnection.StartAsync();
+        _chatService.InvokeChatDisplay += StateHasChanged;
+        await _chatService.StartConnectionAsync();
+        _chatService.ReceiveMessage();
     }
+    private async void SendMessageClicked() => await _chatService.SendChat(Chat);
+    public void Dispose() => _chatService.InvokeChatDisplay -= StateHasChanged;
 
 
-    private bool IsConnected => hubConnection.State == HubConnectionState.Connected;
 
-    private void Send()
-    {
-        Chat.UserName ??= StoredUserName;
-        hubConnection!.SendAsync("SendMessage", Chat);
-    }
-
-    private void SendMessageClicked()
-    {
-        Chat.DateTime = DateTime.Now;
-        if(Chat.UserName != "")
-        {
-            StoredUserName = Chat.UserName;
-        }
-
-        Send();
-        Chat.Message = null;
-    }
 }

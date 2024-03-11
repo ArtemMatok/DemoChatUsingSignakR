@@ -1,4 +1,5 @@
 using DemoChat.ChatHubFold;
+using DemoChat.Client.ChatServices;
 using DemoChat.Client.Pages;
 using DemoChat.Components;
 
@@ -9,6 +10,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddSignalR();
+builder.Services.AddScoped<ChatService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
