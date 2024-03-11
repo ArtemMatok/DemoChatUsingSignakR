@@ -1,7 +1,9 @@
 ﻿@page "/chat"
+@implements IDisposable
+
+@inject ChatService _chatService
 @rendermode InteractiveWebAssembly
 @inject NavigationManager _navManager
-@inject ChatService _chatService
 
 <PageTitle>ChatPage</PageTitle>
 
@@ -16,7 +18,7 @@
                     {
                         <li class="list-group-item mb-2">
                             @item.DateTime.ToString("dd/MM/yy")
-                            <br/>
+                            <br />
                             <span class="fw-bold">@item.UserName:</span>
                             <br />
                             @item.Message
@@ -25,17 +27,17 @@
                 </ul>
                 <div class="mt-3">
                     <EditForm Model="Chat" OnValidSubmit="SendMessageClicked">
-                        <DataAnnotationsValidator/>
+                        <DataAnnotationsValidator />
                         <div class="vstack gap-1">
                             <InputText @bind-Value="Chat.UserName" class="form-control" placeholder="User Name"></InputText>
-                            <InputTextArea @bind-Value="Chat.Message" class="form-control" placeholder="Message"/>
+                            <InputTextArea @bind-Value="Chat.Message" class="form-control" placeholder="Message" />
                         </div>
-                        <button class="float-end btn btn-success" type="submit">Send</button>
+                        <button class="float-end btn btn-success">Send</button>
                     </EditForm>
                 </div>
             </div>
             <div class="card-footer fw-bold">
-                @if(!_chatService.IsConnected)
+                @if (!_chatService.IsConnected)
                 {
                     <div class="alert alert-danger">
                         Chat Disconnected
@@ -57,13 +59,21 @@
 
     private Chat Chat = new();
 
+
+
     protected override async Task OnInitializedAsync()
     {
         _chatService.InvokeChatDisplay += StateHasChanged;
         await _chatService.StartConnectionAsync();
         _chatService.ReceiveMessage();
     }
-    private async void SendMessageClicked() => await _chatService.SendChat(Chat);
+
+    //async void SendMessageClicked() => await _chatService.SendChat(Chat);
+    async void SendMessageClicked()
+    {
+        await _chatService.SendChat(Chat);
+        Console.WriteLine(Chat.Message);
+    }
     public void Dispose() => _chatService.InvokeChatDisplay -= StateHasChanged;
 
 
