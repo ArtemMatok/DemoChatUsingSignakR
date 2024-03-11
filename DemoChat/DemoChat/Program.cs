@@ -2,13 +2,18 @@ using DemoChat.ChatHubFold;
 using DemoChat.Client.ChatServices;
 using DemoChat.Client.Pages;
 using DemoChat.Components;
+using DemoChat.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
-
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 builder.Services.AddSignalR();
 builder.Services.AddScoped<ChatService>();
 var app = builder.Build();
