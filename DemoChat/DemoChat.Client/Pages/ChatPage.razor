@@ -1,0 +1,98 @@
+﻿@page "/chat"
+@rendermode InteractiveWebAssembly
+@inject NavigationManager _navManager
+
+<PageTitle>ChatPage</PageTitle>
+
+
+<div class="row">
+    <div class="col-ld-7">
+        <div class="card">
+            <div class="card-header">Chat</div>
+            <div class="card-body">
+                <ul class="list-group">
+                    @foreach (var item in Chats)
+                    {
+                        <li class="list-group-item mb-2">
+                            @item.DateTime.ToString("dd/MM/yy")
+                            <br/>
+                            <span class="fw-bold">@item.UserName:</span>
+                            <br />
+                            @item.Message
+                        </li>
+                    }
+                </ul>
+                <div class="mt-3">
+                    <EditForm Model="Chat" OnValidSubmit="SendMessageClicked">
+                        <DataAnnotationsValidator/>
+                        <div class="vstack gap-1">
+                            <InputText @bind-Value="Chat.UserName" class="form-control" placeholder="User Name"></InputText>
+                            <InputTextArea @bind-Value="Chat.Message" class="form-control" placeholder="Message"/>
+                        </div>
+                        <button class="float-end btn btn-success" type="submit">Send</button>
+                    </EditForm>
+                </div>
+            </div>
+            <div class="card-footer fw-bold">
+                @if(!IsConnected)
+                {
+                    <div class="alert alert-danger">
+                        Chat Disconnected
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success">
+                        Chat Connected
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public static string? StoredUserName { get; set; }
+    private HubConnection? hubConnection;
+    private List<Chat>  Chats= [];
+
+    private Chat Chat = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(_navManager.ToAbsoluteUri("/chathub"))
+            .Build();
+
+
+        hubConnection.On<Chat>("RecieveMessage", (Chat) =>
+        {
+            Chats.Add(Chat);
+            InvokeAsync(() =>StateHasChanged());
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+
+    private bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+
+    private void Send()
+    {
+        Chat.UserName ??= StoredUserName;
+        hubConnection!.SendAsync("SendMessage", Chat);
+    }
+
+    private void SendMessageClicked()
+    {
+        Chat.DateTime = DateTime.Now;
+        if(Chat.UserName != "")
+        {
+            StoredUserName = Chat.UserName;
+        }
+
+        Send();
+        Chat.Message = null;
+    }
+}
