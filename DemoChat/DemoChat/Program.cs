@@ -1,9 +1,11 @@
+using DemoChat.Authentication;
 using DemoChat.ChatHubFold;
 using DemoChat.Client.ChatServices;
 using DemoChat.Client.Pages;
 using DemoChat.Components;
 using DemoChat.Data;
 using DemoChat.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,20 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ChatRepository>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<ChatService>();
+
+
+builder.Services.AddIdentityCore<AppUser>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultScheme = IdentityConstants.ApplicationScheme;
+    x.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+    
+}).AddIdentityCookies();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
