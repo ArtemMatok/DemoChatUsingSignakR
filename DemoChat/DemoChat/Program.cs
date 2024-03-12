@@ -3,6 +3,7 @@ using DemoChat.Client.ChatServices;
 using DemoChat.Client.Pages;
 using DemoChat.Components;
 using DemoChat.Data;
+using DemoChat.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddControllers();
+builder.Services.AddScoped<ChatRepository>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<ChatService>();
 var app = builder.Build();
@@ -38,6 +41,6 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(DemoChat.Client._Imports).Assembly);
-
+app.MapControllers();
 app.MapHub<ChatHub>("/chathub");
 app.Run();

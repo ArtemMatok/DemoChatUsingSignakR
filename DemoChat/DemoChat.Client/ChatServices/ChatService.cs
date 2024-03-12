@@ -19,7 +19,7 @@ namespace DemoChat.Client.ChatServices
 
         public void ReceiveMessage()
         {
-            _hubConnection.On<Chat>("RecieveMessage", (chat) =>
+            _hubConnection.On<Chat>("ReceiveMessage", (chat) =>
             {
                 Chats.Add(chat);
                 InvokeChatDisplay?.Invoke();

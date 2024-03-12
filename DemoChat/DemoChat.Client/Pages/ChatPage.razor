@@ -1,7 +1,7 @@
 ﻿@page "/chat"
-@implements IDisposable
 
-@inject ChatService _chatService
+
+
 @rendermode InteractiveWebAssembly
 @inject NavigationManager _navManager
 
@@ -14,7 +14,7 @@
             <div class="card-header">Chat</div>
             <div class="card-body">
                 <ul class="list-group">
-                    @foreach (var item in _chatService.Chats)
+                    @foreach (var item in Chats)
                     {
                         <li class="list-group-item mb-2">
                             @item.DateTime.ToString("dd/MM/yy")
@@ -26,18 +26,18 @@
                     }
                 </ul>
                 <div class="mt-3">
-                    <EditForm Model="Chat" OnValidSubmit="SendMessageClicked">
+                    <EditForm Model="chat" OnValidSubmit="SendChat">
                         <DataAnnotationsValidator />
                         <div class="vstack gap-1">
-                            <InputText @bind-Value="Chat.UserName" class="form-control" placeholder="User Name"></InputText>
-                            <InputTextArea @bind-Value="Chat.Message" class="form-control" placeholder="Message" />
+                            <InputText @bind-Value="chat.UserName" class="form-control" placeholder="User Name"></InputText>
+                            <InputTextArea @bind-Value="chat.Message" class="form-control" placeholder="Message" />
                         </div>
                         <button class="float-end btn btn-success">Send</button>
                     </EditForm>
                 </div>
             </div>
             <div class="card-footer fw-bold">
-                @if (!_chatService.IsConnected)
+                @if (!IsConnected)
                 {
                     <div class="alert alert-danger">
                         Chat Disconnected
@@ -55,27 +55,31 @@
 </div>
 
 @code {
-    public static string? StoredUserName { get; set; }
-
-    private Chat Chat = new();
-
-
+    private Chat chat = new();
+    private HubConnection? _hubConnection;
+    public List<Chat> Chats { get; set; } = [];
 
     protected override async Task OnInitializedAsync()
     {
-        _chatService.InvokeChatDisplay += StateHasChanged;
-        await _chatService.StartConnectionAsync();
-        _chatService.ReceiveMessage();
-    }
+        _hubConnection = new HubConnectionBuilder()
+        .WithUrl(_navManager.ToAbsoluteUri("/chathub"))
+        .Build();
 
-    //async void SendMessageClicked() => await _chatService.SendChat(Chat);
-    async void SendMessageClicked()
+        _hubConnection.On<Chat>("ReceiveMessage", (chat) =>
+        {
+            Chats.Add(chat);
+            InvokeAsync (() => StateHasChanged());
+        });
+        await _hubConnection.StartAsync();
+        var httpClient = new HttpClient();
+        Chats = await httpClient.GetFromJsonAsync<List<Chat>>("https://localhost:7019/api/Chat");
+
+    }
+    public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;
+
+    public void SendChat()
     {
-        await _chatService.SendChat(Chat);
-        Console.WriteLine(Chat.Message);
+        _hubConnection.SendAsync("SendMessage", chat);
+        chat.Message = null;
     }
-    public void Dispose() => _chatService.InvokeChatDisplay -= StateHasChanged;
-
-
-
 }
