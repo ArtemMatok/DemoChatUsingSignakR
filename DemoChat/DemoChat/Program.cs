@@ -5,6 +5,7 @@ using DemoChat.Client.Pages;
 using DemoChat.Components;
 using DemoChat.Data;
 using DemoChat.Repositories;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +36,10 @@ builder.Services.AddAuthentication(x =>
     x.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     
 }).AddIdentityCookies();
+
+
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddScoped<AuthenticationStateProvider, PersistingServerAuthenticationStateProvider>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -59,4 +64,5 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(DemoChat.Client._Imports).Assembly);
 app.MapControllers();
 app.MapHub<ChatHub>("/chathub");
+app.MapAdditionalIdentityEnpoints();
 app.Run();

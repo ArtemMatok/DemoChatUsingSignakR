@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoChat", "DemoChat\DemoCh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoChat.Client", "DemoChat\DemoChat.Client\DemoChat.Client.csproj", "{516F67E4-84C7-480A-A3C7-5DB592826513}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatModels", "ChatModels\ChatModels.csproj", "{4FA2BD8A-C863-4942-8B57-D78C59AFC48A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatModels", "ChatModels\ChatModels.csproj", "{4FA2BD8A-C863-4942-8B57-D78C59AFC48A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,78 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using DemoChat.Authentication
+@inject UserManager<AppUser> userManager
+@inject SignInManager<AppUser> signInManager
+@inject NavigationManager _navManager
+@page "/Account/Login"
+
+<h1>Log in</h1>
+<div class="row">
+    <div class="col-md-4">
+        @(message != "" ? message : "")
+        <section>
+            <EditForm Model="loginModel" OnValidSubmit="LoginAsync" FormName="Login">
+                <DataAnnotationsValidator />
+                <hr />
+                <ValidationSummary class="text-danger" role="alert" />
+
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="loginModel.Email" class="form-control" placeholder="name@example.com"></InputText>
+                    <label for="email" class="form-label">Email</label>
+                    <ValidationMessage For="()=>loginModel.Email" />
+                </div>
+
+
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="loginModel.Password" class="form-control" placeholder="Password"></InputText>
+                    <label for="password" class="form-label">Password</label>
+                    <ValidationMessage For="()=>loginModel.Password" />
+                </div>
+
+                <div>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log In</button>
+                </div>
+
+            </EditForm>
+        </section>
+    </div>
+</div>
+
+
+
+@code {
+    private string message = "";
+    [SupplyParameterFromForm]
+    private LoginModel loginModel { get; set; } = new();
+
+    private async Task LoginAsync()
+    {
+        var findUser = await userManager.FindByEmailAsync(loginModel.Email);
+        if (findUser == null)
+        {
+            message = "Sorry, user is not registered";
+            return;
+        }
+        var result = await signInManager.CheckPasswordSignInAsync(findUser, loginModel.Password, false);
+
+        if (!result.Succeeded)
+        {
+            message = "Sorry, invalid email/password";
+            return;
+        }
+
+        await signInManager.PasswordSignInAsync(findUser, loginModel.Password, false, false);
+
+        _navManager.NavigateTo("/home", true);
+    }
+
+
+    public class LoginModel
+    {
+        [Required]
+        public string Email { get; set; }
+        [Required]
+        public string Password { get; set; }
+
+    }
+}
